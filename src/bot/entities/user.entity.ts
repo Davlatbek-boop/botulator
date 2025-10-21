@@ -11,13 +11,13 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  telegram_id: number;
+  @Column({nullable: true})
+  telegram_id: string;
 
-  @Column()
+  @Column({nullable: true})
   username: string;
 
-  @Column()
+  @Column({nullable: true})
   firstname: string;
 
   @CreateDateColumn()

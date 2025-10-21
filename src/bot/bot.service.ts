@@ -18,11 +18,11 @@ export class BotService {
 
   async onStart(ctx: Context) {
     const user = await this.userRepo.findOneBy({
-      telegram_id: ctx.from!.id,
+      telegram_id: String(ctx.from!.id),
     });
     if (!user) {
       const newUser = this.userRepo.create({
-        telegram_id: ctx.from!.id,
+        telegram_id: String(ctx.from!.id),
         username: ctx.from!.username,
         firstname: ctx.from!.first_name,
       });
@@ -73,8 +73,11 @@ export class BotService {
     const haveUser = await this.isRegistrUser(ctx);
     if (haveUser) {
       await ctx.reply('Xarajat nomini kiriting >>>');
+      const user = await this.userRepo.findOneBy({
+        telegram_id: String(ctx.from!.id),
+      });
       const newExpence = this.expenceRepo.create({
-        user_id: ctx.from!.id,
+        user_id: user!.id,
       });
       await this.expenceRepo.save(newExpence);
       this.userState.set(ctx.from!.id, 'expense');
@@ -85,8 +88,11 @@ export class BotService {
     const haveUser = await this.isRegistrUser(ctx);
     if (haveUser) {
       await ctx.reply('Daromad nomini kiriting >>>');
+      const user = await this.userRepo.findOneBy({
+        telegram_id: String(ctx.from!.id),
+      });
       const newIncome = this.incomeRepo.create({
-        user_id: ctx.from!.id,
+        user_id: user!.id,
       });
       await this.incomeRepo.save(newIncome);
       this.userState.set(ctx.from!.id, 'income');
@@ -96,7 +102,11 @@ export class BotService {
   async showBalance(ctx: Context) {
     const haveUser = await this.isRegistrUser(ctx);
     if (haveUser) {
-      const userId = ctx.from!.id;
+      const telegram_id = ctx.from!.id;
+      const user = await this.userRepo.findOneBy({
+        telegram_id: String(telegram_id),
+      });
+      const userId = user!.id;
       const expences = await this.expenceRepo.find({
         where: { user_id: userId },
       });
@@ -122,8 +132,11 @@ export class BotService {
   }
 
   async report(ctx: Context) {
-    const userId = ctx.from!.id;
-
+    const telegram_id = ctx.from!.id;
+    const user = await this.userRepo.findOneBy({
+      telegram_id: String(telegram_id),
+    });
+    const userId = user!.id;
     const expenses = await this.expenceRepo.find({
       where: {
         user_id: userId,
@@ -175,8 +188,12 @@ export class BotService {
   async onMessage(ctx: Context) {
     const haveUser = await this.isRegistrUser(ctx);
     if (haveUser) {
-      const userId = ctx.from!.id;
-      const state = this.userState.get(userId);
+      const telegram_id = ctx.from!.id;
+      const user = await this.userRepo.findOneBy({
+        telegram_id: String(telegram_id),
+      });
+      const userId = user!.id;
+      const state = this.userState.get(telegram_id);
       const text = ctx.message?.text;
 
       switch (state) {
@@ -262,7 +279,9 @@ export class BotService {
   }
 
   async isRegistrUser(ctx: Context) {
-    const user = await this.userRepo.findOneBy({ telegram_id: ctx.from!.id });
+    const user = await this.userRepo.findOneBy({
+      telegram_id: String(ctx.from!.id),
+    });
     if (!user) {
       await ctx.reply('Iltimos, <b>/start</b> tugmasini bosing', {
         parse_mode: 'HTML',
